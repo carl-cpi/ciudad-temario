@@ -31,8 +31,8 @@ self.addEventListener('fetch', ev => {
       if (req.mode === 'navigate') return Response.redirect(BASE, 302); // no instalado: a la página de entrada
       return new Response('', { status: 404 });
     }
-    try { // página de entrada: de la red si hay, si no de la caché
-      const r = await fetch(req);
+    try { // página de entrada: de la red (revalidando, sin la caché HTTP de GitHub) si hay; si no, de la caché
+      const r = await fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' });
       if (r.ok && PROPIOS.includes(ruta || './')) (await caches.open(CARGADOR)).put(url, r.clone());
       return r;
     } catch (err) {
