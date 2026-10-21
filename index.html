@@ -162,6 +162,11 @@ $('form').addEventListener('submit', async ev => {
 $('usarInstalada').onclick = jugar;
 
 (async () => {
+  // ¿Esta página es la última publicada? (GitHub puede servir una copia antigua hasta 10 min): si no, cargar la nueva
+  if (navigator.onLine) try {
+    const v = (await (await fetch('version.json?x=' + Date.now(), { cache: 'no-store' })).json()).version;
+    if (v && v !== VERSION && sessionStorage.getItem('loci.recarga') !== v) { sessionStorage.setItem('loci.recarga', v); return location.replace('./?v=' + v); }
+  } catch {}
   if (sinSoporte) { $('sub').innerHTML = '<b>Este navegador no puede instalar el juego.</b><br>Usa Safari (iOS 16.4 o posterior), Chrome o Edge actualizados.'; $('nota').hidden = true; return; }
   await navigator.serviceWorker.register('sw.js');
   const hay = instalada && (await caches.has('temario-juego-' + instalada));
