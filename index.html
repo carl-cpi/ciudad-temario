@@ -60,7 +60,7 @@
     <b>Android:</b> ⋮ → «Instalar aplicación». <b>PC:</b> icono de instalar de Chrome / Edge.</p>
 </main>
 <script>
-const VERSION = '20261021-cf31b2';
+const VERSION = '20261021-0d66a7';
 const CACHE = 'temario-juego-' + VERSION;
 const $ = id => document.getElementById(id);
 const instalada = localStorage.getItem('loci.juego.version');
@@ -70,7 +70,15 @@ const b64 = { a: u => btoa(String.fromCharCode(...new Uint8Array(u))), de: s => 
 const TIPOS = { html: 'text/html; charset=utf-8', js: 'text/javascript; charset=utf-8', css: 'text/css; charset=utf-8', json: 'application/json',
   webmanifest: 'application/manifest+json', png: 'image/png', svg: 'image/svg+xml', jpg: 'image/jpeg', webp: 'image/webp', woff2: 'font/woff2', txt: 'text/plain; charset=utf-8' };
 
-const jugar = () => location.replace('app/index.html');
+// Antes de entrar: sincronizar el progreso con los demás dispositivos (si la versión lo trae; máx. ~7 s)
+async function sincronizar() {
+  try {
+    $('progreso').hidden = false; $('form').hidden = true; $('txt').textContent = 'Sincronizando tu progreso…'; $('barra').style.width = '100%';
+    const s = await import('./app/js/sync.js');
+    await Promise.race([s.alAbrir(), new Promise(r => setTimeout(r, 7000))]);
+  } catch (err) { console.warn('sync', err); }
+}
+const jugar = async () => { await sincronizar(); location.replace('app/index.html'); };
 
 async function descargar(texto) {
   $('progreso').hidden = false; $('form').hidden = true;
@@ -136,7 +144,7 @@ async function instalar(material, recordar) {
   if (recordar) localStorage.setItem('loci.juego.clave', b64.a(k)); else localStorage.removeItem('loci.juego.clave');
   navigator.storage?.persist?.();
   await navigator.serviceWorker.ready;
-  jugar();
+  await jugar();
 }
 
 function pedirClave(msg) {
